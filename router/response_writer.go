@@ -3,6 +3,8 @@ package router
 import (
     "encoding/json"
     "net/http"
+    "path/filepath"
+    "io/ioutil"
 )
 
 type ResponseWriter struct {
@@ -40,6 +42,23 @@ func (w *ResponseWriter) WriteAsJson(a any) error {
 
     w.Header().Add("Content-Type", "application/json")
     err = w.Write([]byte(string(j)))
+
+    return err
+}
+
+func (w *ResponseWriter) WriteFromFile(filePath string) error {
+    var err error
+
+    var files []byte
+    files, err = ioutil.ReadFile(filePath) 
+    if err != nil {
+        return err
+    }
+
+    filename := filepath.Base(filePath)
+
+    w.Header().Add("Content-Disposition", "attachment; filename="+filename)
+    err = w.Write(files)
 
     return err
 }

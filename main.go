@@ -5,6 +5,7 @@ import (
     "net/http"
     "myapp/router"
     "errors"
+    "io"
     "github.com/go-chi/chi/v5/middleware"
 )
 
@@ -15,6 +16,12 @@ func main() {
 
     r.Get("/", helloWorld)
     r.Get("/json", helloJson)
+    r.Get("/file/{filename}", helloFile)
+    r.Get("/echo-param/{param}", echoParam)
+    r.Get("/echo-query", echoQuery)
+    r.Get("/echo-queries", echoQueries)
+    r.Get("/echo-form", echoForm)
+    r.Post("/echo-post", echoPost)
     r.WithErrorHandler(basicErrorHandler).Get("/basic-error-handler", helloError)
     r.WithErrorHandler(myErrorHandler).Get("/common-error-handler", helloError)
     r.WithErrorHandler(myErrorHandler).Get("/my-error-handler", helloMyError)
@@ -88,4 +95,33 @@ func helloMyError(w router.ResponseWriter, r *router.Request) error {
 
 func helloError(w router.ResponseWriter, r *router.Request) error {
     return errors.New("Hello Error")
+}
+
+func helloFile(w router.ResponseWriter, r *router.Request) error {
+    return w.WriteFromFile(r.URLParam("filename"))
+}
+
+func echoParam(w router.ResponseWriter, r *router.Request) error {
+    return w.WriteString(r.URLParam("param"))
+}
+
+func echoQuery(w router.ResponseWriter, r *router.Request) error {
+    return w.WriteString(r.URLQuery("query"))
+}
+
+func echoQueries(w router.ResponseWriter, r *router.Request) error {
+    return w.WriteAsJson(r.URLQueries("query"))
+}
+
+func echoForm(w router.ResponseWriter, r *router.Request) error {
+    return w.WriteString(r.FormValue("value"))
+}
+
+func echoPost(w router.ResponseWriter, r *router.Request) error {
+    b, err := io.ReadAll(r.Body)
+    if err != nil {
+        return err
+    }
+
+    return w.Write(b)
 }
